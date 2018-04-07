@@ -17,6 +17,6 @@ will use a high quality camera to take pictures, which take A LOT of space. Comp
 and this was easier rather than redesigning the system. The utility will sleep for 60 seconds, this should give enough time for several
 apps to automatically download and sync. To avoid problems, do this at the beginning of an event before scouters have pulled the event. Make sure
 all target devices have an active internet connection.
-* The app will then auto correct all the status to available.
+* The app will then auto correct all the statuses to available.
 
 If you run into problems, contact me: wdavies973@gmail.com.
