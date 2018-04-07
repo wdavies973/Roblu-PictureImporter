@@ -7,6 +7,7 @@ import com.cpjd.models.*;
 import com.cpjd.requests.CloudCheckoutRequest;
 import com.cpjd.requests.CloudTeamRequest;
 import com.cpjd2.models.RCheckout;
+import com.cpjd2.models.RForm;
 import com.cpjd2.models.metrics.RGallery;
 import com.cpjd2.models.metrics.RMetric;
 import org.codehaus.jackson.map.DeserializationConfig;
@@ -103,6 +104,8 @@ public class Console {
 
         CloudCheckout[] checkouts = new CloudCheckoutRequest(r, teamCode).pullCheckouts(null, true);
 
+        System.out.println("Pulled "+checkouts.length+" from the server");
+
         if(checkouts == null || checkouts.length == 0) {
             System.out.println("No active event was found on the server. Aborting...");
             return;
@@ -143,10 +146,23 @@ public class Console {
         ArrayList<RCheckout> toUpload = new ArrayList<>();
 
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        RForm form = null;
+        try {
+            form = mapper.readValue(ct.getForm(), RForm.class);
+        } catch(Exception e) {
+            System.out.println("Failed to pull form. This is a non fatal error assuming you had a gallery metric in the pit tab on your initial upload.");
+        }
+
         for(Object key : pictures.keySet()) {
             loop : for(CloudCheckout cc : checkouts) {
                 try {
                     RCheckout checkout = mapper.readValue(cc.getContent(), RCheckout.class);
+
+                    // Verify the form
+                   if(form != null) {
+                       checkout.getTeam().verify(form);
+                   }
 
                     if(checkout.getTeam().getTabs().get(0).getTitle().equalsIgnoreCase("PIT") && checkout.getTeam().getNumber() == (int)key) {
 
@@ -161,9 +177,8 @@ public class Console {
                                 System.out.println("Processed team: "+checkout.getTeam().getName());
                                 // Add any upload flags
                                 toUpload.add(checkout);
-                                checkout.setNameTag("Roblu Mass Picture Importer");
-                                checkout.setTime(System.currentTimeMillis());
-                                checkout.setStatus(2);
+                                checkout.setNameTag("Roblu-PictureImporter");
+                                checkout.setStatus(2); // available
                                 break loop;
                             }
                         }
@@ -214,7 +229,6 @@ public class Console {
         } catch(Exception e) {
             //
         }
-
 
         System.out.println("Thank you for using the Roblu Mass Picture uploader.");
     }
